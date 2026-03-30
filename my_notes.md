@@ -2,39 +2,63 @@
 
 ## App States
 
-- Start (game not started yet)
-- Playing (user is guessing letters)
-- Win (all letters guessed)
--  Lose (no lives left)
-- Replay / Exit decision
+So the game basically moves through a few clear phases, and I like thinking of it as a little “journey” for the user:
+
+* **Start** → the game hasn’t begun yet, kind of like a waiting/setup state
+* **Playing** → this is the main part, where the user is actively guessing letters and interacting
+* **Win** → all letters are guessed correctly (best case scenario, obviously)
+* **Lose** → the user runs out of lives 
+* **Replay / Exit decision** → giving the user control at the end feels important, like do they want revenge or are they done
+
+I feel like separating these states clearly makes the logic cleaner and also helps if I ever want to turn this into something bigger (like with a UI or animations).
 
 ## App Variables
+These are basically the core pieces that keep the game alive:
 
-- `secret_word` → the word to guess
-- `guessed_letters` → list of letters already guessed
-- `lives` → number of attempts left
-- `guess` → current input letter
-- `max_lives` → initial number of allowed attempts
+* `secret_word` → the actual word the user is trying to guess
+* `guessed_letters` → keeps track of everything the user has already tried (important to avoid repetition issues)
+* `lives` → how many chances the user has left 
+* `guess` → the current input from the user
+* `max_lives` → the starting number of lives (useful if I ever want difficulty levels)
+
+I could also maybe add stuff like:
+* `display_word` → what the user currently sees (with _ _ _ and revealed letters)
+* `game_state` → to explicitly track whether we’re in Start / Playing / Win / Lose
+
 
 ## App Rules and Invariants
+These are like the “laws of the universe” for the game—things that should *always* be true no matter what:
 
-- The number of lives decreases only when the guess is incorrect
-- A letter should not be counted twice if guessed multiple times
-- The game ends when:
+* Lives only go down if the guess is wrong (no punishing correct answers obviously)
+* If a letter is guessed multiple times, it shouldn’t affect lives again (otherwise it’s unfair + annoying)
+* The game ends in only two valid ways:
+  * all letters guessed → **win**
+  * lives = 0 → **lose**
+* The displayed word should *always* match the correctly guessed letters (no glitches where letters disappear or don’t show)
+* Only single-letter inputs should be accepted (keeping it simple and controlled)
 
-  - all letters are guessed → win
-  - lives reach 0 → lose
-- The displayed word must always reflect correctly guessed letters
-- Only single-letter inputs should be accepted
+I also feel like consistency here is key—if one rule breaks, the whole game starts feeling buggy or unreliable.
+
 
 ## App Bugs and Edge Cases
+This is honestly where things get interesting, because users will *always* find a way to break stuff 
 
-- User inputs more than one letter
-- User inputs non-letter characters (numbers, symbols)
-- User repeats the same letter multiple times
-- Empty input (just pressing enter)
-- Word contains repeated letters (must reveal all occurrences)
-- Case sensitivity issues (uppercase vs lowercase)
+Some obvious (and not-so-obvious) cases I need to handle:
+* User inputs more than one letter (like “ab”)
+* User inputs non-letter characters (numbers, symbols, random stuff)
+* User repeats the same letter multiple times (shouldn’t be penalized again)
+* Empty input (just pressing enter… classic)
+* Word contains repeated letters → all occurrences should be revealed, not just one
+* Case sensitivity issues → “A” vs “a” should be treated the same
+
+Extra things I’m thinking about:
+* What if the user inputs spaces?
+* What if they try uppercase + lowercase mixes?
+* Maybe give feedback messages like “you already guessed that” instead of silently ignoring
+* Prevent crashing no matter what input is given (like making it super robust)
+
+
+Overall, I feel like thinking through all of this makes the app way more solid. It’s not just about making it *work*, but making it feel smooth, fair, and actually enjoyable to use. Also it feels like this could evolve into a bigger project later if I add UI, difficulty levels, or even categories of words.
 
 
 # CoPilot Suggestions
@@ -196,3 +220,112 @@ A good test checklist is:
 - boundary attempts (`1 -> 0`)
 - replay reset
 - post-game input rejection
+
+## Extra features 
+**Implementation Plan**
+
+1. Define the target design first (one short spec).
+2. Decide scoring formula.
+3. Decide difficulty presets.
+4. Decide category list and how words are stored.
+5. Decide timer behavior on timeout.
+6. Confirm whether these features apply to human mode only or also auto-play.
+
+7. Refactor foundations before adding features.
+8. Introduce a `GameConfig` object for difficulty, timer, and category.
+9. Introduce a `GameSession` object for one round state.
+10. Introduce a `PlayerProfile`/`ScoreBoard` object for multi-game score.
+11. Keep current functions, but route them through config/session objects.
+
+12. Add score system across multiple games.
+13. Add persistent in-memory stats for current run:
+  - total_games
+  - wins
+  - losses
+  - total_score
+  - streak
+14. Scoring formula (recommended baseline):
+  - base points per win
+  - bonus for remaining lives
+  - bonus for faster completion
+  - category/difficulty multiplier
+  - zero points on loss
+15. Show scoreboard at end of each round and from main menu.
+16. Add reset-score option in menu.
+
+17. Add difficulty levels.
+18. Create presets:
+  - Easy: more lives, longer timer, simpler words
+  - Medium: default lives/timer
+  - Hard: fewer lives, shorter timer, harder words
+19. Tie difficulty to:
+  - `max_lives`
+  - per-turn time limit
+  - word pool filtering
+  - score multiplier
+20. Add difficulty selection before game start.
+21. Save last selected difficulty for replay convenience.
+
+22. Add word categories.
+23. Create a structured dictionary like:
+  - category name -> list of words
+24. Add category selection menu:
+  - explicit choice
+  - random category option
+25. Validate category has enough words.
+26. Show selected category in UI and final summary.
+
+27. Add timer-based guessing.
+28. Choose implementation strategy:
+  - soft timer (measure elapsed after input) for best portability
+  - hard timeout input only if you accept OS/platform complexity
+29. Per turn:
+  - start timer
+  - collect guess
+  - compute elapsed
+  - if elapsed > limit: count as timeout penalty
+30. Timeout penalty policy:
+  - recommended: lose 1 life, no guessed letter added
+31. Display remaining/allowed time each turn.
+
+32. Update game flow to support all features cleanly.
+33. Start phase:
+  - choose mode, difficulty, category
+  - initialize session and score context
+34. Playing phase:
+  - process guesses with timer + validation
+  - apply scoring events
+35. End phase:
+  - show round summary (result, points gained, total score)
+  - replay or return to menu
+
+36. Testing plan (must be added as features land).
+37. Scoring tests:
+  - win/loss scoring
+  - difficulty multiplier
+  - streak updates
+38. Difficulty tests:
+  - preset values applied correctly
+39. Category tests:
+  - category selection and random category behavior
+40. Timer tests:
+  - timeout path  
+  - normal path within time
+41. Integration tests:
+  - two consecutive games update scoreboard correctly
+  - replay keeps score but resets round state
+
+42. Milestone rollout (low risk).
+43. Milestone 1: Config/session refactor only.
+44. Milestone 2: Difficulty + categories.
+45. Milestone 3: Scoreboard across rounds.
+46. Milestone 4: Timer logic.
+47. Milestone 5: polish UI, docs, and tests.
+
+48. Definition of done.
+49. All new menu options work end-to-end.
+50. Score carries across multiple games in one run.
+51. Difficulty changes lives/timer/word complexity.
+52. Category selection affects chosen secret words.
+53. Timer timeout behavior is deterministic and tested.
+54. Tests pass and README reflects new behavior.
