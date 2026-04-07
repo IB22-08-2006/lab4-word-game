@@ -1,99 +1,89 @@
-
 # Guess The Word
 
-A small terminal-based Hangman-style game written in Python.
+A simple terminal-based Hangman-style game built in Python.
+I designed this project to be clean, easy to run, and focused on core game logic, with both a human mode and a basic AI mode for testing.
 
-The project includes two modes:
-- Human play mode
-- Auto play mode (AI guesses random letters)
+## Overview
 
-## Current Project State
+The game is implemented in a single file (`main.py`) and doesn’t require any external libraries. It includes a simple menu where you can:
 
-This README reflects the actual implementation in [main.py](main.py):
-- Single-file Python application
-- No external dependencies
-- Menu loop with three options: Play, Auto Play, Quit
-- Shared word list and shared max lives constant
-- Input normalization and validation in human mode
-- Repeated guesses do not reduce lives
+* Play manually
+* Watch the AI play
+* Quit the game
+
+Both modes share the same rules, word list, and life system.
 
 ## Features
 
-- Random secret word selected from a predefined list
-- Masked word display using underscores
-- Lives system with loss at zero lives
-- Win when all letters of the word are revealed
-- Validation for player input:
-	- strips spaces
-	- lowercases input
-	- accepts only one alphabetic character
-- Feedback for invalid and repeated guesses
+* Random word selection from a predefined list
+* Hidden word displayed with underscores
+* 6 lives per game
+* Clear win/lose conditions
+* Input validation for human players:
+  * trims spaces
+  * converts input to lowercase
+  * only accepts a single letter
+* Repeated guesses are handled properly (no life penalty)
+* Feedback for invalid or already used letters
 
-## Rules
+## Game Rules
 
-- You start each game with 6 lives.
-- A life is lost only for a new incorrect guess.
-- Repeating a previous guess does not cost a life.
-- The game ends in one of two terminal states:
-	- Win: all letters are revealed
-	- Lose: lives reach zero
+* You start with **6 lives**
+* You lose a life only when guessing a **new incorrect letter**
+* Repeating a letter does **not** cost a life
+* The game ends when:
+  * you **guess all letters** → win
+  * you run out of lives → lose
 
 ## Word List
 
-The current words are software-themed:
-- algorithm
-- compiler
-- dataset
-- debugger
-- function
-- network
-- python
-- testing
-- variable
-- workflow
+All words are software-related:
+* algorithm
+* compiler
+* dataset
+* debugger
+* function
+* network
+* python
+* testing
+* variable
+* workflow
 
 ## Project Structure
 
-- [main.py](main.py): game logic, UI loop, and auto-play mode
-- [my_notes.md](my_notes.md): design thinking, rules, and edge cases
-- [JOURNAL.md](JOURNAL.md): development log
+* `main.py` – contains the full game logic, UI loop, and AI mode
+* `my_notes.md` – personal notes about design decisions and edge cases
+* `JOURNAL.md` – development progress and reflections
 
-## Run
+## How to Run
 
-Requirements:
-- Python 3.10+ recommended
-
-Run from the project folder:
-
+Make sure you have Python 3.10+ installed.
+From the project folder, run:
 ```bash
 python main.py
 ```
-
-On some macOS setups:
-
+On some systems:
 ```bash
 python3 main.py
 ```
 
-## How to Use
+## How to Play
 
-1. Start the program.
-2. Choose:
-	 - 1 for human play
-	 - 2 for auto play
-	 - q to quit
-3. In human mode, enter one letter per turn.
+1. Start the program
+2. Choose an option:
+   * `1` → play manually
+   * `2` → watch auto-play
+   * `q` → quit
+3. If playing manually, enter one letter per turn
 
-## Known Limitations
+## Current Limitations
+* No score tracking between games
+* Word list is hardcoded (not loaded from a file)
+* No unit tests yet
+* Game flow is loop-based (no explicit state model yet)
 
-- No persistent score tracking between rounds
-- No external dictionary file yet (words are in code)
-- No unit tests yet
-- No explicit enum/object for phase state (flow is currently loop-based)
-
-## Possible Next Improvements
-
-- Load words from a text file
-- Add difficulty levels (lives or word complexity)
-- Add test coverage for edge cases
-- Add explicit game phase state model
+## Next Steps / Ideas
+* Load words from an external file
+* Add difficulty levels (lives, word complexity)
+* Write unit tests for edge cases
+* Refactor into a clearer game state model

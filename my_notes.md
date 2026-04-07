@@ -61,6 +61,10 @@ Extra things I’m thinking about:
 Overall, I feel like thinking through all of this makes the app way more solid. It’s not just about making it *work*, but making it feel smooth, fair, and actually enjoyable to use. Also it feels like this could evolve into a bigger project later if I add UI, difficulty levels, or even categories of words.
 
 
+
+
+
+
 # CoPilot Suggestions
 
 ## App States
