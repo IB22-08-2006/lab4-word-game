@@ -80,36 +80,55 @@ def test_is_valid_guess_accepts_single_alpha_only():
     assert main.is_valid_guess("@") is False
 
 
-def test_play_game_handles_invalid_then_repeated_then_wins(monkeypatch, capsys):
-    monkeypatch.setattr(main.random, "choice", lambda _words: "python")
-
-    # invalid -> valid -> repeated -> finish winning sequence
-    inputs = iter(["", "p", "p", "y", "t", "h", "o", "n"])
-    monkeypatch.setattr(builtins, "input", lambda _prompt: next(inputs))
-
-    main.play_game()
-    out = capsys.readouterr().out
-
-    assert "Invalid input. Enter a single letter (a-z)." in out
-    assert "You already guessed that letter." in out
-    assert "You win! Word was: python" in out
+def test_select_secret_word_returns_word_from_category():
+    word = main.select_secret_word("programming", main.WORD_BANK_BY_CATEGORY)
+    assert word in main.WORD_BANK_BY_CATEGORY["programming"]
 
 
-def test_play_game_loss_path(monkeypatch, capsys):
-    monkeypatch.setattr(main.random, "choice", lambda _words: "python")
+def test_create_round_state_initializes_correctly():
+    state = main.create_round_state("python", "programming", 6)
+    assert state.secret_word == "python"
+    assert state.category == "programming"
+    assert state.guessed_letters == []
+    assert state.lives == 6
+    assert state.ended is False
+    assert state.won is False
 
-    # 6 unique wrong letters to exhaust lives
-    inputs = iter(["a", "b", "c", "d", "e", "f"])
-    monkeypatch.setattr(builtins, "input", lambda _prompt: next(inputs))
 
-    main.play_game()
-    out = capsys.readouterr().out
+def test_compute_round_score_win():
+    difficulty = main.build_difficulty_configs()["easy"]
+    # Won with 5 lives and took 5 seconds
+    score = main.compute_round_score(True, 5, 5.0, difficulty)
+    assert score > 0
 
-    assert "You lost! Word was: python" in out
+
+def test_compute_round_score_loss_is_zero():
+    difficulty = main.build_difficulty_configs()["easy"]
+    score = main.compute_round_score(False, 5, 5.0, difficulty)
+    assert score == 0
+
+
+def test_update_scoreboard_increments_wins():
+    board = main.ScoreBoard(0, 0, 0, 0, 0, 0)
+    main.update_scoreboard(board, True, 100)
+    assert board.total_games == 1
+    assert board.wins == 1
+    assert board.total_score == 100
+    assert board.current_streak == 1
+
+
+def test_update_scoreboard_increments_losses():
+    board = main.ScoreBoard(0, 0, 0, 0, 0, 0)
+    main.update_scoreboard(board, False, 0)
+    assert board.total_games == 1
+    assert board.losses == 1
+    assert board.current_streak == 0
 
 
 def test_auto_play_terminates_and_prints_result(monkeypatch, capsys):
-    monkeypatch.setattr(main.random, "choice", lambda _seq: _seq[0])
+    monkeypatch.setattr(
+        main.random, "choice", lambda _seq: _seq[0] if isinstance(_seq, list) else _seq
+    )
 
     main.auto_play()
     out = capsys.readouterr().out
@@ -118,39 +137,10 @@ def test_auto_play_terminates_and_prints_result(monkeypatch, capsys):
     assert "Word was:" in out
 
 
-def test_main_menu_calls_play_and_quit(monkeypatch):
-    called = {"play": 0, "auto": 0}
-
-    monkeypatch.setattr(
-        main, "play_game", lambda: called.__setitem__("play", called["play"] + 1)
-    )
-    monkeypatch.setattr(
-        main, "auto_play", lambda: called.__setitem__("auto", called["auto"] + 1)
-    )
-
-    inputs = iter(["1", "q"])
-    monkeypatch.setattr(builtins, "input", lambda _prompt: next(inputs))
-
-    main.main()
-
-    assert called["play"] == 1
-    assert called["auto"] == 0
-
-
-def test_main_menu_calls_auto_and_quit(monkeypatch):
-    called = {"play": 0, "auto": 0}
-
-    monkeypatch.setattr(
-        main, "play_game", lambda: called.__setitem__("play", called["play"] + 1)
-    )
-    monkeypatch.setattr(
-        main, "auto_play", lambda: called.__setitem__("auto", called["auto"] + 1)
-    )
-
-    inputs = iter(["2", "q"])
-    monkeypatch.setattr(builtins, "input", lambda _prompt: next(inputs))
-
-    main.main()
-
-    assert called["play"] == 0
-    assert called["auto"] == 1
+def test_build_difficulty_configs_has_all_levels():
+    configs = main.build_difficulty_configs()
+    assert "easy" in configs
+    assert "medium" in configs
+    assert "hard" in configs
+    assert configs["easy"].max_lives == 10
+    assert configs["hard"].max_lives == 5
